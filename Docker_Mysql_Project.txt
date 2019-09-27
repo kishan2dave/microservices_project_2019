@@ -1,0 +1,89 @@
+
+---To check Image and Containers:
+docker images
+docker container ls -a 
+
+---To Get Mysql dependencies::
+*)Setting New username & Password
+docker run --name <containerName> -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=<DataBase_Name> -e MYSQL_USER=<User_Name> -e MYSQL_PASSWORD=<My_Password> -d mysql
+docker run --name demo-mysql-cont -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=kyaprocess -e MYSQL_USER=mysql_user -e MYSQL_PASSWORD=mysql_pass -d mysql
+
+docker exec -it <mysqlcontainerName> mysql -u <User_Name> -p
+docker exec -it demo-mysql-cont mysql -u mysql_user -p
+Image of MySql created.
+
+---- Create Jar file for the Project:
+*)Form the Project Location entere cmd: In command prompt 
+	mvn clean install -DskipTests   or (clean install -DskipTests  from -> Maven build..)
+	docker build -f dockerfile -t kycprocessimage-app .    (This will copy Project Image to docker)
+	docker build -f dockerfile -t <ProjectImpageNmae> .
+Before above step need to have dockerfile created and placed in projectlevel.
+Sample dockerfile below at end.
+
+
+----Run the Project Application form docker
+*)Once both image is availabvlew in docker (i.e mysql & project images)
+	Run will host the project in docker and provide port to access it.
+	docker run -h 192.168.99.100 -p <externam_port_any>:<internal_port_frm_project> --name <Anynmae> --link <mysqlcontainerName>:mysql -d <ProjectImpageNmae>
+	docker run -h 192.168.99.100 -p 7090:6060 --name container-app --link demo-mysql-cont:mysql -d kycprocessimage-app	
+
+
+
+---- Direct deployment using compose 
+*)We may not be requiring to do all the above steps, below will help for direct image creation.
+Need to have docker YML file for that at project level (docker YML below)
+docker-compose up
+
+
+--- Docker Hub:
+Create docker hub login
+
+to check login:
+docker login
+
+To associate projectImage to dockerHub repository
+docker tag <ProjectImage:Tag> <dockerRepo:versionName>
+docker tag repo/kycprocessimage-app2:latest kishan2dave/kychub:v1
+
+docker push kishan2dave/kychub:v1
+
+
+oc new-app -e MYSQL_USER=oc_user -e MYSQL_PASSWORD=oc_pass -e MYSQL_DATABASE=kycprocess -e MYSQL_ROOT_PASSWORD=password mysql --name=ockyc-app
+
+oc get pods
+----#############---------------
+
+
+
+--docker File:-------------
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ADD target/kycprocess26092019-0.0.1-SNAPSHOT.jar kycprocessdocker.jar
+ENV JAVA_OPTS=""
+ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /kycprocessdocker.jar" ]
+
+--docker YML:--------------
+version: '3'
+
+services:
+  mysql:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=kyaprocess
+      - MYSQL_USER=mysql_user
+      - MYSQL_PASSWORD=mysql_pass
+    volumes:
+      - /data/mysql
+  demo-app:
+    image: repo/kycprocessimage-app2
+    build:
+      context: ./
+      dockerfile: dockerfile
+    depends_on:
+      - mysql
+    ports:
+      - 7080:6060
+    volumes:
+      - /data/compose-app
+----------------------------------------------------------------------------------

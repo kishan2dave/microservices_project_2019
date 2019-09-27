@@ -1,0 +1,46 @@
+https://github.com/eswaribala/rpsboa_sep_19
+
+docker run --name demo-mysql-cont -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=kyaprocess -e MYSQL_USER=mysql_user -e MYSQL_PASSWORD=mysql_pass -d mysql
+
+docker exec -it demo-mysql-cont mysql -u mysql_user -p
+
+docker images
+
+docker container ls -a 
+
+
+docker logs demo-mysql 
+
+docker rm containerid
+
+docker stop containerid
+docker rm demo-mysql 
+
+docker restart containerid
+
+
+
+--------------------------
+
+from project loc to be entered in cmd
+	mvn clean install -DskipTests
+	docker build -f dockerfile -t kycprocessimage-app .
+
+
+tcp://192.168.99.100:2376
+
+docker run -h 192.168.99.100 -p 7090:6060 --name container-app --link demo-mysql-cont:mysql -d kycprocessimage-app
+
+docker-compose up
+
+creat docker hub account
+docker login
+
+docker tag repo/kycprocessimage-app2:latest kishan2dave/kychub:v1
+
+docker push kishan2dave/kychub:v1
+
+oc new-app -e MYSQL_USER=oc_user -e MYSQL_PASSWORD=oc_pass -e MYSQL_DATABASE=kycprocess -e MYSQL_ROOT_PASSWORD=password mysql --name=ockyc-app
+
+oc get pods
+
